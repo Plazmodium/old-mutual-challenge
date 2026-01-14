@@ -1,0 +1,26 @@
+<div class="container mx-auto p-4">
+  <a routerLink="/" class="text-blue-500 hover:underline mb-4 inline-block">&larr; Back to Home</a>
+
+  @if (loading()) {
+    <p>Loading country details...</p>
+  } @else if (country(); as c) {
+    <div class="bg-white shadow rounded-lg p-6 flex flex-col md:flex-row gap-6">
+      <img [ngSrc]="c.flagSvg" width="320" height="160" [alt]="c.commonName"
+           class="w-full md:w-1/2 rounded shadow-sm">
+      <div>
+        <h1 class="text-3xl font-bold mb-4">{{ c.officialName }}</h1>
+        <p><strong>Common Name:</strong> {{ c.commonName }}</p>
+        <p><strong>Population:</strong> {{ c.population.toLocaleString() }}</p>
+        <p><strong>Capital:</strong> {{ c.capital || 'N/A' }}</p>
+
+        <!--        Extra info - if required-->
+        <!--        <p><strong>Region:</strong> {{ c.region }}</p>-->
+        <!--        <p><strong>Subregion:</strong> {{ c.subregion || 'N/A' }}</p>-->
+        <!--        <p><strong>Country Code:</strong> {{ c.cca3 }}</p>-->
+
+      </div>
+    </div>
+  } @else {
+    <p>Country not found.</p>
+  }
+</div>
