@@ -2,6 +2,45 @@
 
 This repository contains both the backend and frontend for the Old Mutual Code Challenge.
 
+## Architecture Overview
+
+```mermaid
+graph TD
+    subgraph Client_Layer [Client Layer]
+        A[Browser]
+    end
+
+    subgraph Frontend_App [Frontend: Angular]
+        B[Components]
+        C[Services]
+        D[Models/DTOs]
+        B --> C
+        C --> D
+    end
+
+    subgraph Backend_App [Backend: Spring Boot]
+        E[Controllers]
+        F[Services]
+        G[Clients - RestClient/HTTP Interface]
+        H[Resilience4j - Circuit Breaker/Retry]
+        E --> F
+        F --> G
+        G -.-> H
+    end
+
+    subgraph External_API [External Data Source]
+        I[Rest Countries API]
+    end
+
+    A <-->|HTTP/REST| E
+    A <-->|Serves UI| Frontend_App
+    G <-->|HTTP/REST| I
+
+    style Frontend_App fill:#f9f,stroke:#333,stroke-width:2px
+    style Backend_App fill:#bbf,stroke:#333,stroke-width:2px
+    style External_API fill:#dfd,stroke:#333,stroke-width:2px
+```
+
 ## Project Structure
 - `backend/`: Spring Boot application (Java 17, Gradle)
 - `frontend/`: Angular application (Node.js 20, Angular 21)
