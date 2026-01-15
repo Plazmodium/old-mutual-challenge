@@ -6,9 +6,12 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import oldmutual.spring.boot.oldmutualchallenge.services.CountryService;
 import oldmutual.spring.boot.oldmutualchallenge.models.Country;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/countries")
+@Validated
 @Tag(name = "Country API", description = "Endpoints for retrieving country information")
 public class CountryController {
 
@@ -44,7 +48,7 @@ public class CountryController {
     })
     public ResponseEntity<Iterable<Country>> getCountryByName(
             @Parameter(description = "The name of the country", required = true)
-            @PathVariable String name) {
+            @PathVariable @NotBlank @Size(min = 1, max = 100) String name) {
         Iterable<Country> country = countryService.getCountryByName(name);
         return ResponseEntity.ok(country);
     }

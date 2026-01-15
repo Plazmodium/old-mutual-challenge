@@ -108,4 +108,23 @@ class CountryControllerTest {
                 .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:4200"))
                 .andExpect(header().string("Access-Control-Allow-Methods", containsString("GET")));
     }
+
+    @Test
+    void getCountryByName_shouldReturnBadRequest_whenNameIsTooLong() throws Exception {
+        String longName = "a".repeat(101);
+        mockMvc.perform(get("/countries/" + longName))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value(containsString("getCountryByName.name: size must be between 1 and 100")));
+    }
+
+    @Test
+    void getCountryByName_shouldReturnBadRequest_whenNameIsBlank() throws Exception {
+        mockMvc.perform(get("/countries/ "))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value(containsString("must not be blank")));
+    }
 }
