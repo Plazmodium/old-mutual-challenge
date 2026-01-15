@@ -1,5 +1,5 @@
-<div [routerLink]="['/detail', country().commonName]" class="border p-4 rounded shadow hover:bg-blue-100 cursor-pointer">
+<a [routerLink]="['/detail', country().commonName]" class="block border p-4 rounded shadow hover:bg-blue-100 cursor-pointer">
   <img [ngSrc]="country().flagPng" width="320" height="160" [alt]="country().commonName"
        class="w-full h-32 object-cover mb-2">
   <h3 class="font-bold text-lg">{{ country().commonName }}</h3>
-</div>
+</a>
