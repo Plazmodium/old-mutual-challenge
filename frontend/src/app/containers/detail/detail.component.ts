@@ -6,6 +6,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CountriesService } from '../../services/countries.service';
 import { ICountry } from '../../models/country.model';
 import { IUiState, initialUiState } from '../../models/ui-state.model';
+import { mapHttpError } from '../../utils/error-mapper';
 
 @Component({
   selector: 'app-detail',
@@ -33,9 +34,11 @@ export class DetailComponent implements OnInit {
           },
           error: (err) => {
             console.error('Error fetching country detail', err);
+            const { message, code } = mapHttpError(err);
             this.uiState.set({
               status: 'error',
-              message: 'Failed to load country details. Please try again later.'
+              message,
+              code
             });
           }
         });

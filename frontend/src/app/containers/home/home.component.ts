@@ -7,6 +7,7 @@ import { CountriesService } from '../../services/countries.service';
 import { CountryCardComponent } from '../../components/country-card.component';
 import { ICountry, IPage } from '../../models/country.model';
 import { IUiState, initialUiState } from '../../models/ui-state.model';
+import { mapHttpError } from '../../utils/error-mapper';
 
 @Component({
   selector: 'app-home',
@@ -59,9 +60,11 @@ export class HomeComponent {
         },
         error: (err) => {
           console.error('Error fetching countries:', err);
+          const { message, code } = mapHttpError(err);
           this.uiState.set({
             status: 'error',
-            message: 'Failed to load countries. Please try again later.'
+            message,
+            code
           });
         }
       });
