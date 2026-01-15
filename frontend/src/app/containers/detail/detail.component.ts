@@ -1,6 +1,7 @@
 import {CommonModule, NgOptimizedImage} from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import {Component, DestroyRef, inject, OnInit, signal} from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { CountriesService } from '../../services/countries.service';
 import { ICountry } from '../../models/country.model';
@@ -15,6 +16,7 @@ import { IUiState, initialUiState } from '../../models/ui-state.model';
 export class DetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private countriesService = inject(CountriesService);
+  private destroyRef = inject(DestroyRef);
 
   public country = signal<ICountry | null>(null);
   public uiState = signal<IUiState>({ ...initialUiState, status: 'loading' });
@@ -22,19 +24,21 @@ export class DetailComponent implements OnInit {
   public ngOnInit(): void {
     const name = this.route.snapshot.paramMap.get('name');
     if (name) {
-      this.countriesService.getCountryByName(name).subscribe({
-        next: (data) => {
-          this.country.set(data[0] || null);
-          this.uiState.set({ status: 'success', message: null });
-        },
-        error: (err) => {
-          console.error('Error fetching country detail', err);
-          this.uiState.set({
-            status: 'error',
-            message: 'Failed to load country details. Please try again later.'
-          });
-        }
-      });
+      this.countriesService.getCountryByName(name)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (data) => {
+            this.country.set(data[0] || null);
+            this.uiState.set({ status: 'success', message: null });
+          },
+          error: (err) => {
+            console.error('Error fetching country detail', err);
+            this.uiState.set({
+              status: 'error',
+              message: 'Failed to load country details. Please try again later.'
+            });
+          }
+        });
     } else {
       this.uiState.set({ status: 'idle', message: null });
     }

@@ -1,6 +1,7 @@
-import { Component, inject, signal, effect } from '@angular/core';
+import { Component, inject, signal, effect, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { CountriesService } from '../../services/countries.service';
 import { CountryCardComponent } from '../../components/country-card.component';
@@ -15,6 +16,7 @@ import { IUiState, initialUiState } from '../../models/ui-state.model';
 })
 export class HomeComponent {
   private countriesService = inject(CountriesService);
+  private destroyRef = inject(DestroyRef);
 
   public countries = signal<ICountry[]>([]);
   public uiState = signal<IUiState>(initialUiState);
@@ -47,6 +49,7 @@ export class HomeComponent {
     const regionParam = region || undefined;
 
     this.countriesService.getAllCountries(page, size, sortParam, regionParam)
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (pageData: IPage<ICountry>) => {
           this.countries.set(pageData.content);

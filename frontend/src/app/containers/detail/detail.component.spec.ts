@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DetailComponent } from './detail.component';
 import { CountriesService } from '../../services/countries.service';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of, throwError, NEVER } from 'rxjs';
 import { ICountry } from '../../models/country.model';
 
 describe('DetailComponent', () => {
@@ -101,5 +101,15 @@ describe('DetailComponent', () => {
     fixture.detectChanges();
     expect(fixture.componentInstance.uiState().status).toBe('idle');
     expect(countriesServiceSpy.getCountryByName).not.toHaveBeenCalled();
+  });
+
+  it('should show loading state', () => {
+    countriesServiceSpy.getCountryByName.mockReturnValue(NEVER);
+    const fixture = TestBed.createComponent(DetailComponent);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.uiState().status).toBe('loading');
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Loading country details...');
   });
 });
