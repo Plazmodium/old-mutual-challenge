@@ -66,11 +66,14 @@ describe('HomeComponent', () => {
   });
 
   it('should show error state when service fails', () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     countriesServiceSpy.getAllCountries.mockReturnValue(throwError(() => new Error('API Error')));
     const fixture = TestBed.createComponent(HomeComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Failed to load countries. Please try again later.');
     expect(compiled.textContent).not.toContain('Loading...');
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 });
