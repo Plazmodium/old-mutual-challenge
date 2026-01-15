@@ -1,5 +1,6 @@
 package oldmutual.spring.boot.oldmutualchallenge;
 
+import oldmutual.spring.boot.oldmutualchallenge.config.AppConfig;
 import oldmutual.spring.boot.oldmutualchallenge.models.ICountryApiClient;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -19,9 +20,9 @@ public class OldMutualChallengeApplication {
     }
 
     @Bean
-    public ICountryApiClient countryApiClient() {
+    public ICountryApiClient countryApiClient(AppConfig appConfig) {
         RestClient restClient = RestClient.builder()
-                .baseUrl("https://restcountries.com/v3.1")
+                .baseUrl(appConfig.getCountriesApiUrl())
                 .build();
 
         HttpServiceProxyFactory factory = HttpServiceProxyFactory

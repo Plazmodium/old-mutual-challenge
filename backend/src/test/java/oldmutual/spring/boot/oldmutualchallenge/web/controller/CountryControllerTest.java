@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(CountryController.class)
-@Import({oldmutual.spring.boot.oldmutualchallenge.config.CorsConfig.class, GlobalExceptionHandler.class})
+@Import({oldmutual.spring.boot.oldmutualchallenge.config.CorsConfig.class, oldmutual.spring.boot.oldmutualchallenge.config.AppConfig.class, GlobalExceptionHandler.class})
 class CountryControllerTest {
 
     @Autowired
