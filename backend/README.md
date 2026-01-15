@@ -45,6 +45,29 @@ The project follows a standard Spring Boot layered architecture:
 
 ## Architecture Layout
 
+```mermaid
+sequenceDiagram
+    participant Client
+    participant LoggingFilter
+    participant CountryController
+    participant CountryService
+    participant Resilience as Resilience (Retry/Circuit Breaker)
+    participant ExternalAPI as REST Countries API
+    participant CountryMapper
+
+    Client->>LoggingFilter: HTTP Request
+    LoggingFilter->>CountryController: Assign correlationId
+    CountryController->>CountryService: Call Service
+    CountryService->>Resilience: Execute with Resilience
+    Resilience->>ExternalAPI: Fetch Data (ICountryApiClient)
+    ExternalAPI-->>Resilience: API Response
+    Resilience-->>CountryService: Data
+    CountryService->>CountryMapper: Map to DTO
+    CountryMapper-->>CountryService: DTOs
+    CountryService-->>CountryController: Processed Data
+    CountryController-->>Client: JSON Response
+```
+
 1. **Client Request**: The client hits an endpoint in `CountryController`. A `LoggingFilter` assigns a unique `correlationId` to the request.
 2. **Service Layer**: `CountryController` calls `CountryService`.
 3. **Resilience**: `CountryService` attempts to fetch data. If the external API is down or slow, `Spring Retry` will attempt retries, and the `Circuit Breaker` will trip if failures persist.

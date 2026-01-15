@@ -26,6 +26,31 @@ This is the frontend application for the Old Mutual Code Challenge. It is built 
 
 The project follows a modular and component-based architecture:
 
+```mermaid
+graph TD
+    subgraph UI_Layer [UI Layer]
+        Containers[Containers - Smart Components]
+        Components[Components - Presentational Components]
+    end
+
+    subgraph Business_Layer [Business & Data Layer]
+        Services[Services - API & Logic]
+        Models[Models - Type Definitions]
+        Utils[Utils - Helper Functions]
+    end
+
+    subgraph Infrastructure [Infrastructure]
+        SSR[Server-Side Rendering]
+    end
+
+    Containers --> Components
+    Containers --> Services
+    Services --> Models
+    Services --> Utils
+    Containers --> Models
+    SSR --> Containers
+```
+
 - **Containers (`src/app/containers`)**: Smart components that handle data fetching and state management.
   - `home`: Displays the list of all countries with pagination, filtering, and sorting.
   - `detail`: Displays detailed information about a specific country.
