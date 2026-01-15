@@ -4,6 +4,9 @@ import oldmutual.spring.boot.oldmutualchallenge.exceptions.CountryNotFoundExcept
 import oldmutual.spring.boot.oldmutualchallenge.exceptions.ExternalApiException;
 import oldmutual.spring.boot.oldmutualchallenge.models.Country;
 import oldmutual.spring.boot.oldmutualchallenge.models.ICountryApiClient;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -30,6 +33,9 @@ public class CountryService implements ICountryService {
     }
 
     @Override
+    @Retryable(retryFor = {ResourceAccessException.class, HttpServerErrorException.class}, 
+               maxAttempts = 3, backoff = @Backoff(delay = 1000, multiplier = 2))
+    @CircuitBreaker(name = "countryService")
     public List<Country> getAllCountries() {
         try {
             return countryApiClient.getAllCountries().stream()
@@ -94,6 +100,9 @@ public class CountryService implements ICountryService {
     }
 
     @Override
+    @Retryable(retryFor = {ResourceAccessException.class, HttpServerErrorException.class}, 
+               maxAttempts = 3, backoff = @Backoff(delay = 1000, multiplier = 2))
+    @CircuitBreaker(name = "countryService")
     public List<Country> getCountryByName(String name) {
         try {
             return countryApiClient.getCountryByName(name).stream()

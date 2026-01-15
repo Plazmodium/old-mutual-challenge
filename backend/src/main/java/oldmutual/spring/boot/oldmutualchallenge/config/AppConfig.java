@@ -11,6 +11,8 @@ public class AppConfig {
 
     private String countriesApiUrl;
     private List<String> corsAllowedOrigins;
+    private int connectTimeout = 5000;
+    private int readTimeout = 5000;
 
     public String getCountriesApiUrl() {
         return countriesApiUrl;
@@ -26,5 +28,21 @@ public class AppConfig {
 
     public void setCorsAllowedOrigins(List<String> corsAllowedOrigins) {
         this.corsAllowedOrigins = corsAllowedOrigins;
+    }
+
+    public int getConnectTimeout() {
+        return connectTimeout;
+    }
+
+    public void setConnectTimeout(int connectTimeout) {
+        this.connectTimeout = connectTimeout;
+    }
+
+    public int getReadTimeout() {
+        return readTimeout;
+    }
+
+    public void setReadTimeout(int readTimeout) {
+        this.readTimeout = readTimeout;
     }
 }
