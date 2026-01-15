@@ -174,6 +174,151 @@ class CountryServiceTest {
     }
 
     @Test
+    void getCountryByName_shouldReturnMultipleCountries_whenApiReturnsMultiple() {
+        // Given
+        CountryDto dto1 = new CountryDto(new CountryDto.NameDto("United States", "USA", Map.of()), "US", "USA", null, null, "Americas", null, 331000000L);
+        CountryDto dto2 = new CountryDto(new CountryDto.NameDto("United States Minor Outlying Islands", "USM", Map.of()), "UM", "UMI", null, null, "Americas", null, 300L);
+        when(countryApiClient.getCountryByName("United")).thenReturn(List.of(dto1, dto2));
+
+        // When
+        List<Country> result = countryService.getCountryByName("United");
+
+        // Then
+        assertThat(result).hasSize(2);
+    }
+
+    @Test
+    void getAllCountries_shouldReturnEmptyList_whenApiReturnsEmpty() {
+        // Given
+        when(countryApiClient.getAllCountries()).thenReturn(List.of());
+
+        // When
+        List<Country> result = countryService.getAllCountries();
+
+        // Then
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void getAllCountries_paginated_shouldReturnEmptyPage_whenOutOfBounds() {
+        // Given
+        CountryDto dto = new CountryDto(
+                new CountryDto.NameDto("Test", "Official Test", Map.of()),
+                "TT", "TST", null, null, null, null, null
+        );
+        when(countryApiClient.getAllCountries()).thenReturn(List.of(dto));
+
+        // When
+        Page<Country> result = countryService.getAllCountries(PageRequest.of(1, 10), null);
+
+        // Then
+        assertThat(result.getContent()).isEmpty();
+        assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    void getAllCountries_sortedByMultipleProperties_shouldReturnSortedPage() {
+        // Given
+        CountryDto dto1 = new CountryDto(
+                new CountryDto.NameDto("B", "B", Map.of()), "BB", "BBB",
+                null, null, "Region", null, 1000L
+        );
+        CountryDto dto2 = new CountryDto(
+                new CountryDto.NameDto("A", "A", Map.of()), "AA", "AAA",
+                null, null, "Region", null, 1000L
+        );
+        CountryDto dto3 = new CountryDto(
+                new CountryDto.NameDto("C", "C", Map.of()), "CC", "CCC",
+                null, null, "Other", null, 500L
+        );
+        when(countryApiClient.getAllCountries()).thenReturn(List.of(dto1, dto2, dto3));
+
+        // When (Sort by region, then by commonName)
+        Page<Country> result = countryService.getAllCountries(
+                PageRequest.of(0, 10, Sort.by("region").ascending().and(Sort.by("commonName").ascending())),
+                null
+        );
+
+        // Then
+        assertThat(result.getContent()).hasSize(3);
+        assertThat(result.getContent().get(0).getRegion()).isEqualTo("Other");
+        assertThat(result.getContent().get(1).getCommonName()).isEqualTo("A");
+        assertThat(result.getContent().get(2).getCommonName()).isEqualTo("B");
+    }
+
+    @Test
+    void getAllCountries_withBlankRegionFilter_shouldReturnAllCountries() {
+        // Given
+        CountryDto dto = new CountryDto(
+                new CountryDto.NameDto("A", "A", Map.of()), "AA", "AAA",
+                null, null, "Region", null, 1000L
+        );
+        when(countryApiClient.getAllCountries()).thenReturn(List.of(dto));
+
+        // When
+        Page<Country> result = countryService.getAllCountries(PageRequest.of(0, 10), "   ");
+
+        // Then
+        assertThat(result.getContent()).hasSize(1);
+    }
+
+    @Test
+    void getAllCountries_withNullFieldsInSort_shouldHandleNullsLast() {
+        // Given
+        CountryDto dto1 = new CountryDto(
+                new CountryDto.NameDto("A", "A", Map.of()), "AA", "AAA",
+                null, null, "Region", null, null
+        );
+        CountryDto dto2 = new CountryDto(
+                new CountryDto.NameDto("B", "B", Map.of()), "BB", "BBB",
+                null, null, "Region", null, 1000L
+        );
+        when(countryApiClient.getAllCountries()).thenReturn(List.of(dto1, dto2));
+
+        // When (Sort by population ascending - nulls should be last)
+        Page<Country> result = countryService.getAllCountries(
+                PageRequest.of(0, 10, Sort.by("population").ascending()),
+                null
+        );
+
+        // Then
+        assertThat(result.getContent().get(0).getCommonName()).isEqualTo("B");
+        assertThat(result.getContent().get(1).getCommonName()).isEqualTo("A");
+    }
+
+    @Test
+    void getAllCountries_complexCombination_shouldReturnCorrectResults() {
+        // Given
+        CountryDto dto1 = new CountryDto(new CountryDto.NameDto("South Africa", "SA", Map.of()), "ZA", "ZAF", null, null, "Africa", null, 60000000L);
+        CountryDto dto2 = new CountryDto(new CountryDto.NameDto("Nigeria", "NG", Map.of()), "NG", "NGA", null, null, "Africa", null, 200000000L);
+        CountryDto dto3 = new CountryDto(new CountryDto.NameDto("Egypt", "EG", Map.of()), "EG", "EGY", null, null, "Africa", null, 100000000L);
+        CountryDto dto4 = new CountryDto(new CountryDto.NameDto("France", "FR", Map.of()), "FR", "FRA", null, null, "Europe", null, 67000000L);
+
+        when(countryApiClient.getAllCountries()).thenReturn(List.of(dto1, dto2, dto3, dto4));
+
+        // When: Region=Africa, Sort=population desc, Page=0, Size=2
+        Page<Country> result = countryService.getAllCountries(
+                PageRequest.of(0, 2, Sort.by("population").descending()),
+                "africa"
+        );
+
+        // Then
+        assertThat(result.getTotalElements()).isEqualTo(3);
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getContent().get(0).getCommonName()).isEqualTo("Nigeria");
+        assertThat(result.getContent().get(1).getCommonName()).isEqualTo("Egypt");
+
+        // When: Page 1
+        Page<Country> resultPage1 = countryService.getAllCountries(
+                PageRequest.of(1, 2, Sort.by("population").descending()),
+                "africa"
+        );
+
+        assertThat(resultPage1.getContent()).hasSize(1);
+        assertThat(resultPage1.getContent().get(0).getCommonName()).isEqualTo("South Africa");
+    }
+
+    @Test
     void getCountryByName_shouldThrowCountryNotFoundException_whenNotFound() {
         // Given
         when(countryApiClient.getCountryByName("Unknown")).thenThrow(HttpClientErrorException.NotFound.class);

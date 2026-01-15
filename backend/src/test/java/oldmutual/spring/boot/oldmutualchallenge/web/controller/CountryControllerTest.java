@@ -57,6 +57,36 @@ class CountryControllerTest {
     }
 
     @Test
+    void getAllCountries_withParams_shouldReturnOkAndPage() throws Exception {
+        // Given
+        Country country = Country.builder().commonName("Nigeria").region("Africa").population(200000000L).build();
+        when(countryService.getAllCountries(any(Pageable.class), any()))
+                .thenReturn(new PageImpl<>(List.of(country), PageRequest.of(0, 10), 1));
+
+        // When & Then
+        mockMvc.perform(get("/countries")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .param("sort", "population,desc")
+                        .param("region", "Africa"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].commonName").value("Nigeria"));
+    }
+
+    @Test
+    void getAllCountries_shouldReturnEmptyPage_whenNoResults() throws Exception {
+        // Given
+        when(countryService.getAllCountries(any(Pageable.class), any()))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
+
+        // When & Then
+        mockMvc.perform(get("/countries"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isEmpty())
+                .andExpect(jsonPath("$.totalElements").value(0));
+    }
+
+    @Test
     void getAllCountries_all_shouldReturnOkAndList() throws Exception {
         // Given
         Country country = Country.builder()

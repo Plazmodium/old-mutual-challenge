@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DetailComponent } from './detail.component';
 import { CountriesService } from '../../services/countries.service';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of, throwError, NEVER } from 'rxjs';
 import { ICountry } from '../../models/country.model';
 
 describe('DetailComponent', () => {
@@ -56,7 +56,7 @@ describe('DetailComponent', () => {
     const fixture = TestBed.createComponent(DetailComponent);
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.loading()).toBe(false);
+    expect(fixture.componentInstance.uiState().status).toBe('success');
     expect(fixture.componentInstance.country()).toEqual(mockCountry);
 
     const compiled = fixture.nativeElement as HTMLElement;
@@ -70,9 +70,9 @@ describe('DetailComponent', () => {
     const fixture = TestBed.createComponent(DetailComponent);
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.loading()).toBe(false);
+    expect(fixture.componentInstance.uiState().status).toBe('error');
     expect(fixture.componentInstance.country()).toBeNull();
-    expect(fixture.componentInstance.error()).toBe('Failed to load country details. Please try again later.');
+    expect(fixture.componentInstance.uiState().message).toBe('Failed to load country details. Please try again later.');
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Failed to load country details. Please try again later.');
@@ -102,7 +102,17 @@ describe('DetailComponent', () => {
 
     const fixture = TestBed.createComponent(DetailComponent);
     fixture.detectChanges();
-    expect(fixture.componentInstance.loading()).toBe(false);
+    expect(fixture.componentInstance.uiState().status).toBe('idle');
     expect(countriesServiceSpy.getCountryByName).not.toHaveBeenCalled();
+  });
+
+  it('should show loading state', () => {
+    countriesServiceSpy.getCountryByName.mockReturnValue(NEVER);
+    const fixture = TestBed.createComponent(DetailComponent);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.uiState().status).toBe('loading');
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Loading country details...');
   });
 });

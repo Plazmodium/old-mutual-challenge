@@ -13,6 +13,7 @@ This is the backend service for the Old Mutual Code Challenge. It is a Spring Bo
 - **Lombok**: To reduce boilerplate code (getters, setters, constructors, etc.).
 - **MapStruct**: For efficient mapping between Models and DTOs.
 - **SpringDoc OpenAPI (Swagger UI)**: For API documentation and testing.
+- **Docker Compose**: For containerized development and deployment.
 - **JUnit 5 & Mockito**: For unit and integration testing.
 
 ## Project Structure
@@ -50,6 +51,37 @@ The project follows a standard Spring Boot layered architecture:
 4. **External API**: `CountryService` uses `ICountryApiClient` to fetch data from the REST Countries API.
 5. **Mapping**: Data is mapped between internal models and DTOs as needed using `CountryMapper` (MapStruct).
 6. **Response**: The processed data is returned to the client as JSON.
+
+## Architecture and Systems Thinking
+
+In a production-ready ecosystem, this service would not operate in isolation. Below is an annotation of how it integrates into a broader enterprise architecture:
+
+### 1. Authentication & Authorization (Auth)
+- **Current State**: The service is currently open.
+- **Ecosystem Integration**: 
+  - **Identity Provider (IdP)**: Integration with an IdP like Keycloak or Okta using OIDC/OAuth2.
+  - **JWT Validation**: The service would act as a Resource Server, validating JWTs issued by the IdP.
+  - **RBAC**: Implementing Role-Based Access Control to restrict access to certain endpoints (e.g., only `ADMIN` could refresh caches or access detailed actuator metrics).
+
+### 2. API Gateway
+- **Current State**: Direct access to the service.
+- **Ecosystem Integration**:
+  - **Entry Point**: All client requests (Frontend) would pass through a Gateway (e.g., Spring Cloud Gateway, Kong, or NGINX).
+  - **Cross-Cutting Concerns**: The Gateway would handle SSL termination, rate limiting, and request routing.
+  - **Security**: The Gateway would perform initial token validation before forwarding requests to this microservice.
+
+### 3. Observability Stack
+- **Current State**: Basic logging with `correlationId` and Spring Boot Actuator.
+- **Ecosystem Integration**:
+  - **Metrics**: Actuator metrics (Prometheus format) would be scraped by **Prometheus** and visualized in **Grafana** dashboards.
+  - **Distributed Tracing**: Integration with **Spring Cloud Sleuth/Micrometer Tracing** and **Zipkin/Jaeger**. The `correlationId` would be part of a larger `traceId` to track requests across multiple services (Gateway -> Country Service -> External API).
+  - **Log Aggregation**: Logs (in JSON format) would be shipped to an **ELK Stack** (Elasticsearch, Logstash, Kibana) or **Grafana Loki** for centralized searching and alerting.
+
+### 4. Resilience & External API Integration
+- **Current State**: Local Resilience4j and Spring Retry.
+- **Ecosystem Integration**:
+  - **Global Circuit Breakers**: Monitoring circuit breaker states via a dashboard (e.g., Resilience4j Dashboard or Grafana).
+  - **Caching**: Implementing a distributed cache (e.g., **Redis**) to store external API responses, reducing latency and external dependency pressure.
 
 ## Getting Started
 

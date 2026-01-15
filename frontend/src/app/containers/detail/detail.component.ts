@@ -1,9 +1,12 @@
 import {CommonModule, NgOptimizedImage} from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import {Component, DestroyRef, inject, OnInit, signal} from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { CountriesService } from '../../services/countries.service';
 import { ICountry } from '../../models/country.model';
+import { IUiState, initialUiState } from '../../models/ui-state.model';
+import { mapHttpError } from '../../utils/error-mapper';
 
 @Component({
   selector: 'app-detail',
@@ -14,27 +17,33 @@ import { ICountry } from '../../models/country.model';
 export class DetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private countriesService = inject(CountriesService);
+  private destroyRef = inject(DestroyRef);
 
   public country = signal<ICountry | null>(null);
-  public loading = signal(true);
-  public error = signal<string | null>(null);
+  public uiState = signal<IUiState>({ ...initialUiState, status: 'loading' });
 
   public ngOnInit(): void {
     const name = this.route.snapshot.paramMap.get('name');
     if (name) {
-      this.countriesService.getCountryByName(name).subscribe({
-        next: (data) => {
-          this.country.set(data[0] || null);
-          this.loading.set(false);
-        },
-        error: (err) => {
-          console.error('Error fetching country detail', err);
-          this.error.set('Failed to load country details. Please try again later.');
-          this.loading.set(false);
-        }
-      });
+      this.countriesService.getCountryByName(name)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (data) => {
+            this.country.set(data[0] || null);
+            this.uiState.set({ status: 'success', message: null });
+          },
+          error: (err) => {
+            console.error('Error fetching country detail', err);
+            const { code } = mapHttpError(err);
+            this.uiState.set({
+              status: 'error',
+              message: 'Failed to load country details. Please try again later.',
+              code
+            });
+          }
+        });
     } else {
-      this.loading.set(false);
+      this.uiState.set({ status: 'idle', message: null });
     }
   }
 }

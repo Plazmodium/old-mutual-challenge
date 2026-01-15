@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { HomeComponent } from './home.component';
 import { CountriesService } from '../../services/countries.service';
-import { of, throwError } from 'rxjs';
+import { of, throwError, NEVER } from 'rxjs';
 import { provideRouter } from '@angular/router';
 import { ICountry, IPage } from '../../models/country.model';
 
@@ -62,7 +62,7 @@ describe('HomeComponent', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('No countries found.');
-    expect(compiled.textContent).not.toContain('Loading...');
+    expect(fixture.componentInstance.uiState().status).toBe('success');
   });
 
   it('should show error state when service fails', () => {
@@ -72,8 +72,61 @@ describe('HomeComponent', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Failed to load countries. Please try again later.');
-    expect(compiled.textContent).not.toContain('Loading...');
-    expect(consoleSpy).toHaveBeenCalled();
-    consoleSpy.mockRestore();
+    expect(fixture.componentInstance.uiState().status).toBe('error');
+    expect(fixture.componentInstance.uiState().message).toBe('Failed to load countries. Please try again later.');
+  });
+
+  it('should show loading state', () => {
+    // Return an observable that doesn't emit immediately to keep it in loading state
+    countriesServiceSpy.getAllCountries.mockReturnValue(NEVER);
+    const fixture = TestBed.createComponent(HomeComponent);
+    // Initial detectChanges triggers the effect and set status to loading
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Loading...');
+    expect(fixture.componentInstance.uiState().status).toBe('loading');
+  });
+
+  it('should change page when onPageChange is called', () => {
+    const fixture = TestBed.createComponent(HomeComponent);
+    fixture.detectChanges();
+
+    // Mock total pages to allow page change
+    fixture.componentInstance.totalPages.set(5);
+
+    fixture.componentInstance.onPageChange(1);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.currentPage()).toBe(1);
+    expect(countriesServiceSpy.getAllCountries).toHaveBeenCalledWith(1, 12, ['commonName,asc'], undefined);
+  });
+
+  it('should reset page and update region when onRegionChange is called', () => {
+    const fixture = TestBed.createComponent(HomeComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.currentPage.set(2);
+
+    fixture.componentInstance.onRegionChange('Africa');
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.selectedRegion()).toBe('Africa');
+    expect(fixture.componentInstance.currentPage()).toBe(0);
+    expect(countriesServiceSpy.getAllCountries).toHaveBeenCalledWith(0, 12, ['commonName,asc'], 'Africa');
+  });
+
+  it('should reset page and update sort when onSortChange is called', () => {
+    const fixture = TestBed.createComponent(HomeComponent);
+    fixture.detectChanges();
+
+    fixture.componentInstance.currentPage.set(2);
+
+    fixture.componentInstance.onSortChange('population,desc');
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.sortBy()).toBe('population,desc');
+    expect(fixture.componentInstance.currentPage()).toBe(0);
+    expect(countriesServiceSpy.getAllCountries).toHaveBeenCalledWith(0, 12, ['population,desc'], undefined);
   });
 });
