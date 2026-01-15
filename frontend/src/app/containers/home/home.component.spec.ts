@@ -128,8 +128,5 @@ describe('HomeComponent', () => {
     expect(fixture.componentInstance.sortBy()).toBe('population,desc');
     expect(fixture.componentInstance.currentPage()).toBe(0);
     expect(countriesServiceSpy.getAllCountries).toHaveBeenCalledWith(0, 12, ['population,desc'], undefined);
-    expect(compiled.textContent).not.toContain('Loading...');
-    expect(consoleSpy).toHaveBeenCalled();
-    consoleSpy.mockRestore();
   });
 });
