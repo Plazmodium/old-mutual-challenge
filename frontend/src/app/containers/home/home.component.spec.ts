@@ -66,6 +66,7 @@ describe('HomeComponent', () => {
   });
 
   it('should show error state when service fails', () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     countriesServiceSpy.getAllCountries.mockReturnValue(throwError(() => new Error('API Error')));
     const fixture = TestBed.createComponent(HomeComponent);
     fixture.detectChanges();
@@ -127,5 +128,8 @@ describe('HomeComponent', () => {
     expect(fixture.componentInstance.sortBy()).toBe('population,desc');
     expect(fixture.componentInstance.currentPage()).toBe(0);
     expect(countriesServiceSpy.getAllCountries).toHaveBeenCalledWith(0, 12, ['population,desc'], undefined);
+    expect(compiled.textContent).not.toContain('Loading...');
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 });
