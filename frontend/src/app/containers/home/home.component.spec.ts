@@ -1,9 +1,10 @@
 import { TestBed } from '@angular/core/testing';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { HomeComponent } from './home.component';
 import { CountriesService } from '../../services/countries.service';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { provideRouter } from '@angular/router';
-import { ICountry } from '../../models/country.model';
+import { ICountry, IPage } from '../../models/country.model';
 
 describe('HomeComponent', () => {
   let countriesServiceSpy: any;
@@ -12,9 +13,23 @@ describe('HomeComponent', () => {
     { commonName: 'Country 2', flagPng: 'https://example.com/2.png', flagSvg: 'https://example.com/2.svg', cca2: 'C2', cca3: 'CO2' } as ICountry
   ];
 
+  const mockPage: IPage<ICountry> = {
+    content: mockCountries,
+    totalElements: 2,
+    totalPages: 1,
+    size: 10,
+    number: 0,
+    first: true,
+    last: true,
+    numberOfElements: 2,
+    empty: false,
+    pageable: { pageNumber: 0, pageSize: 10 } as any,
+    sort: { sorted: true, unsorted: false, empty: false }
+  };
+
   beforeEach(async () => {
     countriesServiceSpy = {
-      getAllCountries: vi.fn().mockReturnValue(of(mockCountries))
+      getAllCountries: vi.fn().mockReturnValue(of(mockPage))
     };
 
     await TestBed.configureTestingModule({
@@ -28,6 +43,7 @@ describe('HomeComponent', () => {
 
   it('should create', () => {
     const fixture = TestBed.createComponent(HomeComponent);
+    fixture.detectChanges();
     expect(fixture.componentInstance).toBeTruthy();
     expect(countriesServiceSpy.getAllCountries).toHaveBeenCalled();
   });
@@ -40,11 +56,21 @@ describe('HomeComponent', () => {
     expect(cards.length).toBe(2);
   });
 
-  it('should show loading state when no countries', () => {
-    countriesServiceSpy.getAllCountries.mockReturnValue(of([]));
+  it('should show empty state when no countries returned', () => {
+    countriesServiceSpy.getAllCountries.mockReturnValue(of({ ...mockPage, content: [], totalElements: 0, totalPages: 0, empty: true }));
     const fixture = TestBed.createComponent(HomeComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('Loading...');
+    expect(compiled.textContent).toContain('No countries found.');
+    expect(compiled.textContent).not.toContain('Loading...');
+  });
+
+  it('should show error state when service fails', () => {
+    countriesServiceSpy.getAllCountries.mockReturnValue(throwError(() => new Error('API Error')));
+    const fixture = TestBed.createComponent(HomeComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Failed to load countries. Please try again later.');
+    expect(compiled.textContent).not.toContain('Loading...');
   });
 });

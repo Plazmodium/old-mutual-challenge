@@ -17,6 +17,7 @@ export class DetailComponent implements OnInit {
 
   public country = signal<ICountry | null>(null);
   public loading = signal(true);
+  public error = signal<string | null>(null);
 
   public ngOnInit(): void {
     const name = this.route.snapshot.paramMap.get('name');
@@ -28,6 +29,7 @@ export class DetailComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error fetching country detail', err);
+          this.error.set('Failed to load country details. Please try again later.');
           this.loading.set(false);
         }
       });

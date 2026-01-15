@@ -3,6 +3,8 @@
 
   @if (loading()) {
     <p>Loading country details...</p>
+  } @else if (error()) {
+    <p class="text-red-500">{{ error() }}</p>
   } @else if (country(); as c) {
     <div class="bg-white shadow rounded-lg p-6 flex flex-col md:flex-row gap-6">
       <img [ngSrc]="c.flagSvg" width="320" height="160" [alt]="c.commonName"

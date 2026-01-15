@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DetailComponent } from './detail.component';
 import { CountriesService } from '../../services/countries.service';
 import { ActivatedRoute, provideRouter } from '@angular/router';
@@ -70,6 +71,10 @@ describe('DetailComponent', () => {
 
     expect(fixture.componentInstance.loading()).toBe(false);
     expect(fixture.componentInstance.country()).toBeNull();
+    expect(fixture.componentInstance.error()).toBe('Failed to load country details. Please try again later.');
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Failed to load country details. Please try again later.');
   });
 
   it('should handle no name in route', () => {

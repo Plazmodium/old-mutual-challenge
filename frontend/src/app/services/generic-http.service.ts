@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -8,8 +8,8 @@ import { Observable } from 'rxjs';
 export class GenericHttpService {
   private http = inject(HttpClient);
 
-  public get<T>(url: string): Observable<T> {
-    return this.http.get<T>(url);
+  public get<T>(url: string, params?: HttpParams): Observable<T> {
+    return this.http.get<T>(url, { params });
   }
 
   public post<T>(url: string, body: any): Observable<T> {
