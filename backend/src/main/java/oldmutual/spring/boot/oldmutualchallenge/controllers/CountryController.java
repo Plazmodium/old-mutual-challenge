@@ -40,7 +40,7 @@ public class CountryController {
     @Operation(summary = "Retrieve all countries with pagination and optional filtering", parameters = {
             @Parameter(name = "page", in = ParameterIn.QUERY, description = "Zero-based page index (0..N)", schema = @Schema(type = "integer", defaultValue = "0")),
             @Parameter(name = "size", in = ParameterIn.QUERY, description = "The size of the page to be returned", schema = @Schema(type = "integer", defaultValue = "10")),
-            @Parameter(name = "sort", in = ParameterIn.QUERY, description = "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.", array = @ArraySchema(schema = @Schema(type = "string")))
+            @Parameter(name = "sort", in = ParameterIn.QUERY, description = "Sorting criteria - use format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.", array = @ArraySchema(schema = @Schema(type = "string")))
     }, responses = {
             @ApiResponse(description = "A paginated list of countries", responseCode = "200",
                     content = @Content(mediaType = "application/json",

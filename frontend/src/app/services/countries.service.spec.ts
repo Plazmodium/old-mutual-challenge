@@ -2,7 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { CountriesService } from './countries.service';
 import { GenericHttpService } from './generic-http.service';
-import { ICountry } from '../models/country.model';
+import { ICountry, IPage } from '../models/country.model';
+import { HttpParams } from '@angular/common/http';
 
 describe('CountriesService', () => {
   let service: CountriesService;
@@ -26,13 +27,20 @@ describe('CountriesService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should get all countries', () => {
-    const mockCountries: ICountry[] = [{ commonName: 'Test Country' } as any];
-    genericHttpSpy.get.mockReturnValue(of(mockCountries));
+  it('should get all countries with pagination', () => {
+    const mockPage: IPage<ICountry> = { content: [{ commonName: 'Test Country' } as any] } as any;
+    genericHttpSpy.get.mockReturnValue(of(mockPage));
 
-    service.getAllCountries().subscribe(countries => {
-      expect(countries).toEqual(mockCountries);
-      expect(genericHttpSpy.get).toHaveBeenCalledWith('http://localhost:8080/countries');
+    service.getAllCountries(0, 10).subscribe(page => {
+      expect(page).toEqual(mockPage);
+      expect(genericHttpSpy.get).toHaveBeenCalledWith(
+        'http://localhost:8080/countries',
+        expect.any(HttpParams)
+      );
+
+      const params = genericHttpSpy.get.mock.calls[0][1] as HttpParams;
+      expect(params.get('page')).toBe('0');
+      expect(params.get('size')).toBe('10');
     });
   });
 
