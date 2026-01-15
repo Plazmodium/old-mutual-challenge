@@ -51,7 +51,7 @@ describe('ErrorMapper', () => {
 
   it('should return default message for non-HttpErrorResponse', () => {
     const result = mapHttpError(new Error('Generic error'));
-    expect(result.message).toContain('unexpected error');
+    expect(result.message).toContain('Failed to load data');
     expect(result.code).toBeNull();
   });
 });

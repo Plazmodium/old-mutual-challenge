@@ -34,10 +34,10 @@ export class DetailComponent implements OnInit {
           },
           error: (err) => {
             console.error('Error fetching country detail', err);
-            const { message, code } = mapHttpError(err);
+            const { code } = mapHttpError(err);
             this.uiState.set({
               status: 'error',
-              message,
+              message: 'Failed to load country details. Please try again later.',
               code
             });
           }

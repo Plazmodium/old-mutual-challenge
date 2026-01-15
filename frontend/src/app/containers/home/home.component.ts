@@ -60,10 +60,10 @@ export class HomeComponent {
         },
         error: (err) => {
           console.error('Error fetching countries:', err);
-          const { message, code } = mapHttpError(err);
+          const { code } = mapHttpError(err);
           this.uiState.set({
             status: 'error',
-            message,
+            message: 'Failed to load countries. Please try again later.',
             code
           });
         }

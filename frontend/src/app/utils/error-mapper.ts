@@ -18,5 +18,5 @@ export function mapHttpError(error: any): { message: string, code: number | null
         return { message: error.error?.message || `An unexpected error occurred (${code}). Please try again later.`, code };
     }
   }
-  return { message: 'An unexpected error occurred. Please try again later.', code: null };
+  return { message: 'Failed to load data. Please try again later.', code: null };
 }
