@@ -10,12 +10,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -33,21 +37,38 @@ class CountryControllerTest {
     private CountryService countryService;
 
     @Test
-    void getAllCountries_shouldReturnOkAndList() throws Exception {
+    void getAllCountries_shouldReturnOkAndPage() throws Exception {
         // Given
         Country country = Country.builder()
                 .commonName("South Africa")
                 .flagPng("https://flagcdn.com/w320/za.png")
                 .capital("Pretoria")
                 .build();
-        when(countryService.getAllCountries()).thenReturn(List.of(country));
+        when(countryService.getAllCountries(any(Pageable.class), any()))
+                .thenReturn(new PageImpl<>(List.of(country), PageRequest.of(0, 10), 1));
 
         // When & Then
         mockMvc.perform(get("/countries"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[0].commonName").value("South Africa"))
-                .andExpect(jsonPath("$[0].flagPng").value("https://flagcdn.com/w320/za.png"));
+                .andExpect(jsonPath("$.content[0].commonName").value("South Africa"))
+                .andExpect(jsonPath("$.content[0].flagPng").value("https://flagcdn.com/w320/za.png"))
+                .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    void getAllCountries_all_shouldReturnOkAndList() throws Exception {
+        // Given
+        Country country = Country.builder()
+                .commonName("South Africa")
+                .build();
+        when(countryService.getAllCountries()).thenReturn(List.of(country));
+
+        // When & Then
+        mockMvc.perform(get("/countries/all"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].commonName").value("South Africa"));
     }
 
     @Test
@@ -89,7 +110,7 @@ class CountryControllerTest {
     @Test
     void getAllCountries_shouldReturnBadGateway_whenExternalApiFails() throws Exception {
         // Given
-        when(countryService.getAllCountries())
+        when(countryService.getAllCountries(any(Pageable.class), any()))
                 .thenThrow(new ExternalApiException("Error calling external API"));
 
         // When & Then

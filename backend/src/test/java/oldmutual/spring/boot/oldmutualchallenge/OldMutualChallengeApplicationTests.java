@@ -7,7 +7,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import oldmutual.spring.boot.oldmutualchallenge.models.ICountryApiClient;
 
 @SpringBootTest
-@Disabled("Disabled due to missing database configuration in test environment")
 class OldMutualChallengeApplicationTests {
 
     @MockitoBean
