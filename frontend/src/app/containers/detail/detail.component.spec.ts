@@ -65,6 +65,7 @@ describe('DetailComponent', () => {
   });
 
   it('should handle error when fetching country', () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     countriesServiceSpy.getCountryByName.mockReturnValue(throwError(() => new Error('API Error')));
     const fixture = TestBed.createComponent(DetailComponent);
     fixture.detectChanges();
@@ -75,6 +76,8 @@ describe('DetailComponent', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Failed to load country details. Please try again later.');
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 
   it('should handle no name in route', () => {
