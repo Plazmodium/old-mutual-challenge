@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { CountriesService } from '../../services/countries.service';
 import { ICountry } from '../../models/country.model';
+import { IUiState, initialUiState } from '../../models/ui-state.model';
 
 @Component({
   selector: 'app-detail',
@@ -16,8 +17,7 @@ export class DetailComponent implements OnInit {
   private countriesService = inject(CountriesService);
 
   public country = signal<ICountry | null>(null);
-  public loading = signal(true);
-  public error = signal<string | null>(null);
+  public uiState = signal<IUiState>({ ...initialUiState, status: 'loading' });
 
   public ngOnInit(): void {
     const name = this.route.snapshot.paramMap.get('name');
@@ -25,16 +25,18 @@ export class DetailComponent implements OnInit {
       this.countriesService.getCountryByName(name).subscribe({
         next: (data) => {
           this.country.set(data[0] || null);
-          this.loading.set(false);
+          this.uiState.set({ status: 'success', message: null });
         },
         error: (err) => {
           console.error('Error fetching country detail', err);
-          this.error.set('Failed to load country details. Please try again later.');
-          this.loading.set(false);
+          this.uiState.set({
+            status: 'error',
+            message: 'Failed to load country details. Please try again later.'
+          });
         }
       });
     } else {
-      this.loading.set(false);
+      this.uiState.set({ status: 'idle', message: null });
     }
   }
 }

@@ -62,7 +62,7 @@ describe('HomeComponent', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('No countries found.');
-    expect(compiled.textContent).not.toContain('Loading...');
+    expect(fixture.componentInstance.uiState().status).toBe('success');
   });
 
   it('should show error state when service fails', () => {
@@ -71,6 +71,7 @@ describe('HomeComponent', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Failed to load countries. Please try again later.');
-    expect(compiled.textContent).not.toContain('Loading...');
+    expect(fixture.componentInstance.uiState().status).toBe('error');
+    expect(fixture.componentInstance.uiState().message).toBe('Failed to load countries. Please try again later.');
   });
 });

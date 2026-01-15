@@ -31,10 +31,10 @@
   </div>
 
   <!-- Flags Payload -->
-  @if (isLoading()) {
+  @if (uiState().status === 'loading') {
     <p>Loading...</p>
-  } @else if (error()) {
-    <p class="text-red-500">{{ error() }}</p>
+  } @else if (uiState().status === 'error') {
+    <p class="text-red-500">{{ uiState().message }}</p>
   } @else if (countries().length === 0) {
     <p>No countries found.</p>
   } @else {

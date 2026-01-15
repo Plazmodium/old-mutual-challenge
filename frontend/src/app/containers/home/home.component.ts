@@ -1,11 +1,11 @@
-import { Component, computed, inject, signal, effect } from '@angular/core';
+import { Component, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
 
 import { CountriesService } from '../../services/countries.service';
 import { CountryCardComponent } from '../../components/country-card.component';
 import { ICountry, IPage } from '../../models/country.model';
+import { IUiState, initialUiState } from '../../models/ui-state.model';
 
 @Component({
   selector: 'app-home',
@@ -17,8 +17,7 @@ export class HomeComponent {
   private countriesService = inject(CountriesService);
 
   public countries = signal<ICountry[]>([]);
-  public isLoading = signal<boolean>(true);
-  public error = signal<string | null>(null);
+  public uiState = signal<IUiState>(initialUiState);
 
   public currentPage = signal<number>(0);
   public pageSize = signal<number>(12);
@@ -42,23 +41,25 @@ export class HomeComponent {
   }
 
   private loadCountries(page: number, size: number, sort: string, region: string): void {
-    this.isLoading.set(true);
-    this.error.set(null);
+    this.uiState.set({ status: 'loading', message: null });
 
     const sortParam = sort ? [sort] : [];
     const regionParam = region || undefined;
 
     this.countriesService.getAllCountries(page, size, sortParam, regionParam)
-      .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (pageData: IPage<ICountry>) => {
           this.countries.set(pageData.content);
           this.totalPages.set(pageData.totalPages);
           this.totalElements.set(pageData.totalElements);
+          this.uiState.set({ status: 'success', message: null });
         },
         error: (err) => {
           console.error('Error fetching countries:', err);
-          this.error.set('Failed to load countries. Please try again later.');
+          this.uiState.set({
+            status: 'error',
+            message: 'Failed to load countries. Please try again later.'
+          });
         }
       });
   }

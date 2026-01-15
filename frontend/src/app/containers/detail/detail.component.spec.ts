@@ -56,7 +56,7 @@ describe('DetailComponent', () => {
     const fixture = TestBed.createComponent(DetailComponent);
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.loading()).toBe(false);
+    expect(fixture.componentInstance.uiState().status).toBe('success');
     expect(fixture.componentInstance.country()).toEqual(mockCountry);
 
     const compiled = fixture.nativeElement as HTMLElement;
@@ -69,9 +69,9 @@ describe('DetailComponent', () => {
     const fixture = TestBed.createComponent(DetailComponent);
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.loading()).toBe(false);
+    expect(fixture.componentInstance.uiState().status).toBe('error');
     expect(fixture.componentInstance.country()).toBeNull();
-    expect(fixture.componentInstance.error()).toBe('Failed to load country details. Please try again later.');
+    expect(fixture.componentInstance.uiState().message).toBe('Failed to load country details. Please try again later.');
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Failed to load country details. Please try again later.');
@@ -99,7 +99,7 @@ describe('DetailComponent', () => {
 
     const fixture = TestBed.createComponent(DetailComponent);
     fixture.detectChanges();
-    expect(fixture.componentInstance.loading()).toBe(false);
+    expect(fixture.componentInstance.uiState().status).toBe('idle');
     expect(countriesServiceSpy.getCountryByName).not.toHaveBeenCalled();
   });
 });
