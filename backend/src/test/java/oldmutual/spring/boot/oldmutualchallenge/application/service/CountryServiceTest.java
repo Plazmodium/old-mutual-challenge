@@ -1,6 +1,8 @@
 package oldmutual.spring.boot.oldmutualchallenge.application.service;
 
 import oldmutual.spring.boot.oldmutualchallenge.dtos.CountryDto;
+import oldmutual.spring.boot.oldmutualchallenge.exceptions.CountryNotFoundException;
+import oldmutual.spring.boot.oldmutualchallenge.exceptions.ExternalApiException;
 import oldmutual.spring.boot.oldmutualchallenge.models.Country;
 import oldmutual.spring.boot.oldmutualchallenge.models.ICountryApiClient;
 import oldmutual.spring.boot.oldmutualchallenge.services.CountryMapper;
@@ -9,11 +11,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 import org.mockito.Mockito;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 class CountryServiceTest {
@@ -73,5 +78,27 @@ class CountryServiceTest {
         // Then
         assertThat(result).isNotEmpty();
         assertThat(result.iterator().next().getCommonName()).isEqualTo("Test");
+    }
+
+    @Test
+    void getCountryByName_shouldThrowCountryNotFoundException_whenNotFound() {
+        // Given
+        when(countryApiClient.getCountryByName("Unknown")).thenThrow(HttpClientErrorException.NotFound.class);
+
+        // When & Then
+        assertThatThrownBy(() -> countryService.getCountryByName("Unknown"))
+                .isInstanceOf(CountryNotFoundException.class)
+                .hasMessageContaining("Country not found with name: Unknown");
+    }
+
+    @Test
+    void getAllCountries_shouldThrowExternalApiException_whenApiFails() {
+        // Given
+        when(countryApiClient.getAllCountries()).thenThrow(new ResourceAccessException("Timeout"));
+
+        // When & Then
+        assertThatThrownBy(() -> countryService.getAllCountries())
+                .isInstanceOf(ExternalApiException.class)
+                .hasMessageContaining("Network error or timeout calling external API");
     }
 }

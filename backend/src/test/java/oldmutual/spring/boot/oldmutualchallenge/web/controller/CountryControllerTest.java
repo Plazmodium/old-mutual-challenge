@@ -1,11 +1,15 @@
 package oldmutual.spring.boot.oldmutualchallenge.web.controller;
 
+import oldmutual.spring.boot.oldmutualchallenge.exceptions.CountryNotFoundException;
+import oldmutual.spring.boot.oldmutualchallenge.exceptions.ExternalApiException;
+import oldmutual.spring.boot.oldmutualchallenge.exceptions.GlobalExceptionHandler;
 import oldmutual.spring.boot.oldmutualchallenge.services.CountryService;
 import oldmutual.spring.boot.oldmutualchallenge.controllers.CountryController;
 import oldmutual.spring.boot.oldmutualchallenge.models.Country;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -19,7 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(CountryController.class)
-@org.springframework.context.annotation.Import(oldmutual.spring.boot.oldmutualchallenge.config.CorsConfig.class)
+@Import({oldmutual.spring.boot.oldmutualchallenge.config.CorsConfig.class, GlobalExceptionHandler.class})
 class CountryControllerTest {
 
     @Autowired
@@ -68,16 +72,31 @@ class CountryControllerTest {
     }
 
     @Test
-    void getCountryByName_shouldReturnOkAndEmptyList_whenNotExists() throws Exception {
+    void getCountryByName_shouldReturnNotFound_whenNotExists() throws Exception {
         // Given
-        when(countryService.getCountryByName("Atlantis")).thenReturn(List.of());
+        when(countryService.getCountryByName("Atlantis"))
+                .thenThrow(new CountryNotFoundException("Country not found with name: Atlantis"));
 
         // When & Then
         mockMvc.perform(get("/countries/Atlantis"))
-                .andExpect(status().isOk())
+                .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$").isEmpty());
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Country not found with name: Atlantis"));
+    }
+
+    @Test
+    void getAllCountries_shouldReturnBadGateway_whenExternalApiFails() throws Exception {
+        // Given
+        when(countryService.getAllCountries())
+                .thenThrow(new ExternalApiException("Error calling external API"));
+
+        // When & Then
+        mockMvc.perform(get("/countries"))
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.status").value(502))
+                .andExpect(jsonPath("$.error").value("Bad Gateway"));
     }
 
     @Test
