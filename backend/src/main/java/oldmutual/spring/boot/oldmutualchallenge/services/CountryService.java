@@ -5,6 +5,7 @@ import oldmutual.spring.boot.oldmutualchallenge.exceptions.ExternalApiException;
 import oldmutual.spring.boot.oldmutualchallenge.models.Country;
 import oldmutual.spring.boot.oldmutualchallenge.models.ICountryApiClient;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.data.domain.Sort;
 
+@Slf4j
 @Service
 public class CountryService implements ICountryService {
 
@@ -37,13 +39,19 @@ public class CountryService implements ICountryService {
                maxAttempts = 3, backoff = @Backoff(delay = 1000, multiplier = 2))
     @CircuitBreaker(name = "countryService")
     public List<Country> getAllCountries() {
+        log.info("Fetching all countries from external API");
+        long startTime = System.currentTimeMillis();
         try {
-            return countryApiClient.getAllCountries().stream()
+            List<Country> result = countryApiClient.getAllCountries().stream()
                     .map(countryMapper::toModel)
                     .collect(Collectors.toList());
+            log.info("Successfully fetched {} countries from external API in {}ms", result.size(), System.currentTimeMillis() - startTime);
+            return result;
         } catch (HttpClientErrorException | HttpServerErrorException e) {
+            log.error("HTTP error calling external API: {} - Status: {}", e.getMessage(), e.getStatusCode());
             throw new ExternalApiException("Error calling external API: " + e.getMessage(), e);
         } catch (ResourceAccessException e) {
+            log.error("Network error or timeout calling external API: {}", e.getMessage());
             throw new ExternalApiException("Network error or timeout calling external API", e);
         }
     }
@@ -104,15 +112,22 @@ public class CountryService implements ICountryService {
                maxAttempts = 3, backoff = @Backoff(delay = 1000, multiplier = 2))
     @CircuitBreaker(name = "countryService")
     public List<Country> getCountryByName(String name) {
+        log.info("Fetching country by name: {} from external API", name);
+        long startTime = System.currentTimeMillis();
         try {
-            return countryApiClient.getCountryByName(name).stream()
+            List<Country> result = countryApiClient.getCountryByName(name).stream()
                     .map(countryMapper::toModel)
                     .collect(Collectors.toList());
+            log.info("Successfully fetched country by name: {} in {}ms", name, System.currentTimeMillis() - startTime);
+            return result;
         } catch (HttpClientErrorException.NotFound e) {
+            log.warn("Country not found with name: {} in {}ms", name, System.currentTimeMillis() - startTime);
             throw new CountryNotFoundException("Country not found with name: " + name);
         } catch (HttpClientErrorException | HttpServerErrorException e) {
+            log.error("HTTP error calling external API for country: {} - Status: {}", name, e.getStatusCode());
             throw new ExternalApiException("Error calling external API: " + e.getMessage(), e);
         } catch (ResourceAccessException e) {
+            log.error("Network error or timeout calling external API for country: {}", name);
             throw new ExternalApiException("Network error or timeout calling external API", e);
         }
     }
