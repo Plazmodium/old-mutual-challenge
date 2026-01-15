@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+import { environment } from '../../environments/environment';
 import { GenericHttpService } from './generic-http.service';
 import { ICountry, IPage } from '../models/country.model';
 
@@ -10,7 +11,7 @@ import { ICountry, IPage } from '../models/country.model';
 })
 export class CountriesService {
   private genericHttp = inject(GenericHttpService);
-  private readonly baseUrl = 'http://localhost:8080';
+  private readonly baseUrl = environment.apiBaseUrl;
 
   public getAllCountries(page: number = 0, size: number = 10, sort?: string[], region?: string): Observable<IPage<ICountry>> {
     let params = new HttpParams()
